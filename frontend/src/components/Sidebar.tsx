@@ -28,7 +28,6 @@ const navItems = [
   { path: '/', label: 'Overview', icon: LayoutDashboard },
   { path: '/upload', label: 'Dataset Upload', icon: UploadCloud },
   { path: '/preprocessing', label: 'Preprocessing', icon: SlidersHorizontal },
-  { path: '/eda', label: 'Exploratory Analysis', icon: BarChart3 },
   { path: '/clickstream', label: 'Clickstream Analytics', icon: MousePointerClick },
   { path: '/purchase-patterns', label: 'Purchase Patterns', icon: ShoppingBag },
   { path: '/funnel', label: 'Conversion Funnel', icon: Filter },

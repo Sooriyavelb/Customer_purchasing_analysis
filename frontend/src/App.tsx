@@ -8,7 +8,6 @@ import { Header } from './components/Header';
 import { Overview } from './pages/Overview';
 import { DatasetUpload } from './pages/DatasetUpload';
 import { DataPreprocessing } from './pages/DataPreprocessing';
-import { EDA } from './pages/EDA';
 import { ClickstreamAnalysis } from './pages/ClickstreamAnalysis';
 import { PurchasePatterns } from './pages/PurchasePatterns';
 import { ConversionFunnel } from './pages/ConversionFunnel';
@@ -117,10 +116,6 @@ export const App: React.FC = () => {
               <Route
                 path="/preprocessing"
                 element={<DataPreprocessing onCleanedReady={fetchHealthAndStatus} />}
-              />
-              <Route
-                path="/eda"
-                element={<EDA isDark={isDark} onLoadDefault={handleLoadDefault} datasetStatus={datasetStatus} />}
               />
               <Route
                 path="/clickstream"
