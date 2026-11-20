@@ -196,10 +196,16 @@ train_conversion_models <- function(session_id, include_early_checkout = FALSE, 
   dt_metrics <- eval_metrics(y_test, dt_prob)
   
   # 3. Random Forest (randomForest)
+  rf_train <- data.table::copy(train_df)
+  rf_train$target <- as.factor(rf_train$target)
+  rf_test <- data.table::copy(test_df)
+  rf_test$target <- factor(rf_test$target, levels = levels(rf_train$target))
+  
   rf_model <- randomForest::randomForest(
-    fmla, data = train_df, ntree = 100, mtry = 3, na.action = na.roughfix
+    fmla, data = rf_train, ntree = 100, mtry = 3, na.action = na.roughfix
   )
-  rf_prob <- predict(rf_model, newdata = test_df, type = "prob")[, 2]
+  rf_prob_mat <- predict(rf_model, newdata = rf_test, type = "prob")
+  rf_prob <- if ("1" %in% colnames(rf_prob_mat)) rf_prob_mat[, "1"] else rf_prob_mat[, 2]
   rf_metrics <- eval_metrics(y_test, rf_prob)
   
   # Feature importance for Random Forest
