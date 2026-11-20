@@ -96,7 +96,11 @@ load_session_data <- function(session_id, apply_mapping = TRUE) {
   
   # Standard auto-conversions for common expected columns
   if ("event_timestamp" %in% names(dt)) {
-    dt[, event_timestamp := as.POSIXct(event_timestamp, tz = "UTC", tryFormats = c("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%OSZ", "%Y/%m/%d %H:%M:%S"))]
+    parsed_vals <- as.POSIXct(as.character(dt$event_timestamp), format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
+    if (all(is.na(parsed_vals)) && nrow(dt) > 0) {
+      parsed_vals <- tryCatch(as.POSIXct(as.character(dt$event_timestamp), tz = "UTC"), error = function(e) rep(as.POSIXct(NA), nrow(dt)))
+    }
+    dt[, event_timestamp := parsed_vals]
   }
   
   # Numeric conversions for key metrics

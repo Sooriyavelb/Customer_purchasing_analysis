@@ -191,7 +191,7 @@ export const VisualAnalyticsStudio: React.FC<{ isDark: boolean; onLoadDefault: (
             <select
               value={chartType}
               onChange={(e) => setChartType(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1.5 text-slate-800 dark:text-slate-200 outline-hidden font-medium"
+              className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1.5 text-slate-900 dark:text-slate-100 outline-hidden font-medium"
             >
               <option value="bar">Bar Chart</option>
               <option value="grouped">Grouped Bar</option>
@@ -209,11 +209,11 @@ export const VisualAnalyticsStudio: React.FC<{ isDark: boolean; onLoadDefault: (
 
           {/* X Axis */}
           <div>
-            <label className="text-slate-500 dark:text-slate-400 font-medium block mb-1">X-Axis / Category</label>
+            <label className="text-slate-600 dark:text-slate-300 font-medium block mb-1">X-Axis / Category</label>
             <select
               value={xCol}
               onChange={(e) => setXCol(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1.5 text-slate-800 dark:text-slate-200 outline-hidden font-medium"
+              className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1.5 text-slate-900 dark:text-slate-100 outline-hidden font-medium"
             >
               {columns.map((c) => (
                 <option key={c.name} value={c.name}>
@@ -225,11 +225,11 @@ export const VisualAnalyticsStudio: React.FC<{ isDark: boolean; onLoadDefault: (
 
           {/* Aggregation Function */}
           <div>
-            <label className="text-slate-500 dark:text-slate-400 font-medium block mb-1">Aggregation</label>
+            <label className="text-slate-600 dark:text-slate-300 font-medium block mb-1">Aggregation</label>
             <select
               value={aggFunc}
               onChange={(e) => setAggFunc(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1.5 text-slate-800 dark:text-slate-200 outline-hidden font-medium"
+              className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1.5 text-slate-900 dark:text-slate-100 outline-hidden font-medium"
             >
               <option value="count">Count (Frequency)</option>
               <option value="sum">Sum</option>
@@ -243,12 +243,12 @@ export const VisualAnalyticsStudio: React.FC<{ isDark: boolean; onLoadDefault: (
 
           {/* Y Axis (Metric) */}
           <div>
-            <label className="text-slate-500 dark:text-slate-400 font-medium block mb-1">Y-Axis / Metric</label>
+            <label className="text-slate-600 dark:text-slate-300 font-medium block mb-1">Y-Axis / Metric</label>
             <select
               value={yCol}
               onChange={(e) => setYCol(e.target.value)}
               disabled={aggFunc === 'count'}
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1.5 text-slate-800 dark:text-slate-200 outline-hidden font-medium disabled:opacity-50"
+              className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1.5 text-slate-900 dark:text-slate-100 outline-hidden font-medium disabled:opacity-50"
             >
               <option value="">-- None (Count Rows) --</option>
               {columns.map((c) => (
@@ -261,11 +261,11 @@ export const VisualAnalyticsStudio: React.FC<{ isDark: boolean; onLoadDefault: (
 
           {/* Group / Color Dimension */}
           <div>
-            <label className="text-slate-500 dark:text-slate-400 font-medium block mb-1">Group By / Series</label>
+            <label className="text-slate-600 dark:text-slate-300 font-medium block mb-1">Group By / Series</label>
             <select
               value={groupCol}
               onChange={(e) => setGroupCol(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1.5 text-slate-800 dark:text-slate-200 outline-hidden font-medium"
+              className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1.5 text-slate-900 dark:text-slate-100 outline-hidden font-medium"
             >
               <option value="">-- None (Single Series) --</option>
               {columns.map((c) => (
@@ -278,11 +278,11 @@ export const VisualAnalyticsStudio: React.FC<{ isDark: boolean; onLoadDefault: (
 
           {/* Limit */}
           <div>
-            <label className="text-slate-500 dark:text-slate-400 font-medium block mb-1">Limit Categories</label>
+            <label className="text-slate-600 dark:text-slate-300 font-medium block mb-1">Limit Categories</label>
             <select
               value={limit}
               onChange={(e) => setLimit(Number(e.target.value))}
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1.5 text-slate-800 dark:text-slate-200 outline-hidden font-medium"
+              className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1.5 text-slate-900 dark:text-slate-100 outline-hidden font-medium"
             >
               <option value={10}>Top 10</option>
               <option value={20}>Top 20</option>
@@ -317,7 +317,7 @@ export const VisualAnalyticsStudio: React.FC<{ isDark: boolean; onLoadDefault: (
                   <select
                     value={f.column}
                     onChange={(e) => handleUpdateFilter(idx, 'column', e.target.value)}
-                    className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-slate-700 dark:text-slate-200"
+                    className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-slate-900 dark:text-slate-100"
                   >
                     {columns.map((c) => (
                       <option key={c.name} value={c.name}>
@@ -328,7 +328,7 @@ export const VisualAnalyticsStudio: React.FC<{ isDark: boolean; onLoadDefault: (
                   <select
                     value={f.operator}
                     onChange={(e) => handleUpdateFilter(idx, 'operator', e.target.value)}
-                    className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-slate-700 dark:text-slate-200"
+                    className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-slate-900 dark:text-slate-100"
                   >
                     <option value="=">=</option>
                     <option value="!=">!=</option>
@@ -343,7 +343,7 @@ export const VisualAnalyticsStudio: React.FC<{ isDark: boolean; onLoadDefault: (
                     placeholder="Filter value..."
                     value={f.value}
                     onChange={(e) => handleUpdateFilter(idx, 'value', e.target.value)}
-                    className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-slate-700 dark:text-slate-200 flex-1 max-w-xs"
+                    className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-slate-900 dark:text-slate-100 flex-1 max-w-xs"
                   />
                   <button
                     onClick={() => handleRemoveFilter(idx)}
@@ -366,7 +366,7 @@ export const VisualAnalyticsStudio: React.FC<{ isDark: boolean; onLoadDefault: (
               placeholder="Name this view (e.g., AOV by Device)..."
               value={configName}
               onChange={(e) => setConfigName(e.target.value)}
-              className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-700 dark:text-slate-200 w-64"
+              className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 w-64"
             />
             <button
               onClick={handleSaveConfig}

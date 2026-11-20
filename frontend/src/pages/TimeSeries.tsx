@@ -161,11 +161,11 @@ export const TimeSeries: React.FC<{ isDark: boolean; onLoadDefault: () => void }
       {/* Control Filters Bar */}
       <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-wrap items-center gap-4 text-xs">
         <div className="flex items-center space-x-2">
-          <span className="font-semibold text-slate-600 dark:text-slate-300">Metric:</span>
+          <span className="font-semibold text-slate-700 dark:text-slate-300">Metric:</span>
           <select
             value={metric}
             onChange={(e) => setMetric(e.target.value)}
-            className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-700 dark:text-slate-200 font-medium outline-hidden"
+            className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 font-medium outline-hidden"
           >
             <option value="revenue">Total Revenue ($)</option>
             <option value="sessions">Total Sessions</option>
@@ -175,11 +175,11 @@ export const TimeSeries: React.FC<{ isDark: boolean; onLoadDefault: () => void }
         </div>
 
         <div className="flex items-center space-x-2">
-          <span className="font-semibold text-slate-600 dark:text-slate-300">Interval:</span>
+          <span className="font-semibold text-slate-700 dark:text-slate-300">Interval:</span>
           <select
             value={interval}
             onChange={(e) => setInterval(e.target.value)}
-            className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-700 dark:text-slate-200 font-medium outline-hidden"
+            className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 font-medium outline-hidden"
           >
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
@@ -188,11 +188,11 @@ export const TimeSeries: React.FC<{ isDark: boolean; onLoadDefault: () => void }
         </div>
 
         <div className="flex items-center space-x-2">
-          <span className="font-semibold text-slate-600 dark:text-slate-300">Forecast Horizon:</span>
+          <span className="font-semibold text-slate-700 dark:text-slate-300">Forecast Horizon:</span>
           <select
             value={forecastPeriods}
             onChange={(e) => setForecastPeriods(Number(e.target.value))}
-            className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-700 dark:text-slate-200 font-medium outline-hidden"
+            className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 font-medium outline-hidden"
           >
             <option value={7}>7 Periods Ahead</option>
             <option value={14}>14 Periods Ahead</option>

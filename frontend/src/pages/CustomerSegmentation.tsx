@@ -109,14 +109,14 @@ export const CustomerSegmentation: React.FC<{ isDark: boolean; onLoadDefault: ()
         </div>
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg text-xs">
-            <span className="text-slate-500 font-medium">Clusters (k):</span>
+            <span className="text-slate-700 dark:text-slate-300 font-medium">Clusters (k):</span>
             <select
               value={selectedK}
               onChange={(e) => setSelectedK(Number(e.target.value))}
-              className="bg-transparent font-bold text-blue-600 outline-hidden cursor-pointer"
+              className="bg-transparent font-bold text-blue-600 dark:text-blue-400 outline-hidden cursor-pointer"
             >
               {[2, 3, 4, 5, 6].map((k) => (
-                <option key={k} value={k} className="dark:bg-slate-900">
+                <option key={k} value={k} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
                   {k} Clusters
                 </option>
               ))}

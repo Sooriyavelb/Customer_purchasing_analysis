@@ -233,7 +233,7 @@ export const DatasetUpload: React.FC<{
                   <select
                     value={mapping[std] || ''}
                     onChange={(e) => setMapping({ ...mapping, [std]: e.target.value })}
-                    className="mt-1 w-full text-xs font-medium bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 outline-hidden"
+                    className="mt-1 w-full text-xs font-medium bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 outline-hidden"
                   >
                     <option value="">-- Unmapped --</option>
                     {data.columns.map((c) => (

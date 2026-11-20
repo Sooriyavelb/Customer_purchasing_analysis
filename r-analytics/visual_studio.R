@@ -53,14 +53,15 @@ query_visual_studio <- function(session_id, config) {
     x_col <- if ("event_type" %in% names(dt)) "event_type" else names(dt)[1]
   }
   
-  # Helper aggregation expression
-  get_agg_expr <- function(col_name, func) {
-    if (func == "sum") return(quote(sum(get(col_name), na.rm = TRUE)))
-    if (func == "mean") return(quote(round(mean(get(col_name), na.rm = TRUE), 2)))
-    if (func == "min") return(quote(min(get(col_name), na.rm = TRUE)))
-    if (func == "max") return(quote(max(get(col_name), na.rm = TRUE)))
-    if (func == "median") return(quote(median(get(col_name), na.rm = TRUE)))
-    if (func == "distinct_count") return(quote(data.table::uniqueN(get(col_name))))
+  # Helper aggregation expression using bquote
+  get_agg_expr <- function(cname, func) {
+    sym <- as.name(cname)
+    if (func == "sum") return(bquote(sum(.(sym), na.rm = TRUE)))
+    if (func == "mean") return(bquote(round(mean(.(sym), na.rm = TRUE), 2)))
+    if (func == "min") return(bquote(min(.(sym), na.rm = TRUE)))
+    if (func == "max") return(bquote(max(.(sym), na.rm = TRUE)))
+    if (func == "median") return(bquote(median(.(sym), na.rm = TRUE)))
+    if (func == "distinct_count") return(bquote(data.table::uniqueN(.(sym))))
     return(quote(.N)) # count
   }
   

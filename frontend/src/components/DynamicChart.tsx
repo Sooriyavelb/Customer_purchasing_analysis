@@ -22,7 +22,7 @@ export const DynamicChart: React.FC<DynamicChartProps> = ({
   const themeAdjustedOption: Record<string, any> = {
     backgroundColor: 'transparent',
     textStyle: {
-      color: isDark ? '#cbd5e1' : '#334155',
+      color: isDark ? '#e2e8f0' : '#1e293b',
       fontFamily: 'Inter, system-ui, sans-serif',
     },
     toolbox: {
@@ -34,7 +34,7 @@ export const DynamicChart: React.FC<DynamicChartProps> = ({
         dataView: { show: true, title: 'Data View', readOnly: true },
       },
       iconStyle: {
-        borderColor: isDark ? '#94a3b8' : '#64748b',
+        borderColor: isDark ? '#cbd5e1' : '#475569',
       },
       right: 15,
       top: 5,
@@ -50,12 +50,47 @@ export const DynamicChart: React.FC<DynamicChartProps> = ({
     ...option,
   };
 
+  // Adjust Tooltip theme colors
+  themeAdjustedOption.tooltip = {
+    backgroundColor: isDark ? '#1e293b' : '#ffffff',
+    borderColor: isDark ? '#334155' : '#cbd5e1',
+    borderWidth: 1,
+    textStyle: {
+      color: isDark ? '#f8fafc' : '#0f172a',
+      fontSize: 12,
+    },
+    ...themeAdjustedOption.tooltip,
+  };
+
+  // Adjust Legend labels
+  if (themeAdjustedOption.legend) {
+    const legends = Array.isArray(themeAdjustedOption.legend)
+      ? themeAdjustedOption.legend
+      : [themeAdjustedOption.legend];
+    legends.forEach((lg: any) => {
+      lg.textStyle = {
+        color: isDark ? '#e2e8f0' : '#1e293b',
+        fontSize: 12,
+        ...lg.textStyle,
+      };
+    });
+  }
+
+  // Adjust Title text style
+  if (themeAdjustedOption.title) {
+    themeAdjustedOption.title.textStyle = {
+      color: isDark ? '#f8fafc' : '#0f172a',
+      ...themeAdjustedOption.title.textStyle,
+    };
+  }
+
   // Adjust xAxis and yAxis if present
   if (themeAdjustedOption.xAxis) {
     const axes = Array.isArray(themeAdjustedOption.xAxis) ? themeAdjustedOption.xAxis : [themeAdjustedOption.xAxis];
     axes.forEach((ax: any) => {
+      ax.nameTextStyle = { color: isDark ? '#cbd5e1' : '#334155', fontWeight: 600, ...ax.nameTextStyle };
       ax.axisLine = { lineStyle: { color: isDark ? '#475569' : '#cbd5e1' } };
-      ax.axisLabel = { color: isDark ? '#94a3b8' : '#64748b', ...ax.axisLabel };
+      ax.axisLabel = { color: isDark ? '#cbd5e1' : '#475569', ...ax.axisLabel };
       ax.splitLine = { lineStyle: { color: isDark ? '#334155' : '#f1f5f9' }, ...ax.splitLine };
     });
   }
@@ -63,8 +98,9 @@ export const DynamicChart: React.FC<DynamicChartProps> = ({
   if (themeAdjustedOption.yAxis) {
     const axes = Array.isArray(themeAdjustedOption.yAxis) ? themeAdjustedOption.yAxis : [themeAdjustedOption.yAxis];
     axes.forEach((ax: any) => {
+      ax.nameTextStyle = { color: isDark ? '#cbd5e1' : '#334155', fontWeight: 600, ...ax.nameTextStyle };
       ax.axisLine = { lineStyle: { color: isDark ? '#475569' : '#cbd5e1' } };
-      ax.axisLabel = { color: isDark ? '#94a3b8' : '#64748b', ...ax.axisLabel };
+      ax.axisLabel = { color: isDark ? '#cbd5e1' : '#475569', ...ax.axisLabel };
       ax.splitLine = { lineStyle: { color: isDark ? '#334155' : '#f1f5f9' }, ...ax.splitLine };
     });
   }

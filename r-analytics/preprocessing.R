@@ -18,25 +18,11 @@ inspect_dataset <- function(session_id) {
   }
   
   # Read preview (first 50 rows) and column metadata
-  # Use data.table fread with nrows = 50 for fast preview
   dt_sample <- data.table::fread(ds_info$path, nrows = 50, stringsAsFactors = FALSE)
   
-  # Read full column info efficiently
-  # Just column headers + line count
-  total_rows <- as.integer(system2("find", args = c("/c", "/v", '""', paste0('"', ds_info$path, '"')), stdout = TRUE))
-  # If system2 fails or returns string, fallback to data.table nrows
-  if (length(total_rows) == 0 || is.na(total_rows)) {
-    dt_full <- data.table::fread(ds_info$path, select = 1)
-    total_rows <- nrow(dt_full)
-  } else {
-    # Parse count from find output if needed
-    cnt_match <- regmatches(total_rows, regexpr("[0-9]+$", total_rows))
-    if (length(cnt_match) > 0) {
-      total_rows <- max(0, as.integer(cnt_match) - 1)
-    } else {
-      total_rows <- nrow(data.table::fread(ds_info$path, select = 1))
-    }
-  }
+  # Read total line count reliably and fast
+  dt_count <- data.table::fread(ds_info$path, select = 1L)
+  total_rows <- nrow(dt_count)
   
   all_cols <- names(dt_sample)
   
@@ -49,10 +35,15 @@ inspect_dataset <- function(session_id) {
     return("character")
   })
   
-  # Check duplicates on a subset of columns or full
-  # Read first 10,000 rows to quickly estimate missing and duplicates
+  # Check duplicates and missing on sample
   dt_est <- data.table::fread(ds_info$path, nrows = 25000, stringsAsFactors = FALSE)
-  missing_counts <- sapply(dt_est, function(x) sum(is.na(x) | x == "" | x == "NA" | x == "null"))
+  missing_counts <- sapply(dt_est, function(x) {
+    if (is.character(x)) {
+      sum(is.na(x) | x == "" | x == "NA" | x == "null")
+    } else {
+      sum(is.na(x))
+    }
+  })
   missing_pcts <- round((missing_counts / nrow(dt_est)) * 100, 1)
   
   duplicates_sample <- sum(duplicated(dt_est))
@@ -128,10 +119,17 @@ run_preprocessing <- function(session_id, options = list()) {
     stop("Raw dataset not found. Please upload a dataset first.")
   }
   
+  count_table_missing <- function(d) {
+    sum(sapply(d, function(col) {
+      if (is.character(col)) sum(is.na(col) | col == "" | col == "NA" | col == "null")
+      else sum(is.na(col))
+    }))
+  }
+
   # Load raw data
   dt <- data.table::fread(raw_file, stringsAsFactors = FALSE)
   initial_rows <- nrow(dt)
-  initial_missing <- sum(is.na(dt) | dt == "" | dt == "NA")
+  initial_missing <- count_table_missing(dt)
   
   # Default options
   remove_duplicates <- ifelse(is.null(options$remove_duplicates), TRUE, as.logical(options$remove_duplicates))
@@ -152,13 +150,17 @@ run_preprocessing <- function(session_id, options = list()) {
   # 2. Timestamp parsing
   invalid_dates_dropped <- 0
   if (parse_dates && "event_timestamp" %in% names(dt)) {
-    dt[, parsed_time := as.POSIXct(event_timestamp, tz = "UTC", tryFormats = c("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%OSZ", "%Y/%m/%d %H:%M:%S"))]
+    parsed_vals <- as.POSIXct(as.character(dt$event_timestamp), format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
+    if (all(is.na(parsed_vals)) && nrow(dt) > 0) {
+      parsed_vals <- tryCatch(as.POSIXct(as.character(dt$event_timestamp), tz = "UTC"), error = function(e) rep(as.POSIXct(NA), nrow(dt)))
+    }
+    dt[, parsed_time := parsed_vals]
     invalid_dates_dropped <- sum(is.na(dt$parsed_time))
     if (invalid_dates_dropped > 0 && handle_missing == "drop") {
       dt <- dt[!is.na(parsed_time)]
     }
-    # Keep standard format
-    dt[!is.na(parsed_time), event_timestamp := format(parsed_time, "%Y-%m-%d %H:%M:%S")]
+    # Keep standard POSIXct timestamp
+    dt[!is.na(parsed_time), event_timestamp := parsed_time]
     dt[, parsed_time := NULL]
   }
   
@@ -219,7 +221,7 @@ run_preprocessing <- function(session_id, options = list()) {
   data.table::fwrite(dt, cleaned_file)
   
   final_rows <- nrow(dt)
-  final_missing <- sum(is.na(dt) | dt == "" | dt == "NA")
+  final_missing <- count_table_missing(dt)
   
   return(list(
     status = "success",

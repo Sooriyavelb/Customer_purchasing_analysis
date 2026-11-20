@@ -230,10 +230,10 @@ export const EDA: React.FC<{ isDark: boolean; onLoadDefault: () => void }> = ({ 
               <select
                 value={selectedDistCol}
                 onChange={(e) => setSelectedDistCol(e.target.value)}
-                className="text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1 text-slate-700 dark:text-slate-200 outline-hidden font-mono"
+                className="text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1 text-slate-900 dark:text-slate-100 outline-hidden font-mono"
               >
                 {data.distributions.map((d) => (
-                  <option key={d.column} value={d.column}>
+                  <option key={d.column} value={d.column} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
                     {d.column}
                   </option>
                 ))}
