@@ -1,50 +1,89 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
-import { EDAResponse } from '../types';
+import { EDAResponse, DatasetStatus } from '../types';
 import { DynamicChart } from '../components/DynamicChart';
 import { LoadingState, ErrorState, EmptyState } from '../components/StatusStates';
-import { BarChart3, TrendingUp, Grid, PieChart } from 'lucide-react';
+import { BarChart3, TrendingUp, Grid, PieChart, Sparkles } from 'lucide-react';
 
-export const EDA: React.FC<{ isDark: boolean; onLoadDefault: () => void }> = ({ isDark, onLoadDefault }) => {
+export const EDA: React.FC<{
+  isDark: boolean;
+  onLoadDefault: () => void;
+  datasetStatus?: DatasetStatus | null;
+}> = ({ isDark, onLoadDefault, datasetStatus }) => {
   const [data, setData] = useState<EDAResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedDistCol, setSelectedDistCol] = useState<string>('');
 
+  const hasDataset = Boolean(datasetStatus?.active_file);
+
   const fetchEDA = async () => {
+    if (!hasDataset) return;
     setLoading(true);
     setError(null);
     try {
       const resp = await api.get('/r/eda/summary');
-      setData(resp.data);
-      if (resp.data.distributions?.length > 0) {
-        setSelectedDistCol(resp.data.distributions[0].column);
+      if (resp.data.status === 'error') {
+        setError(resp.data.message || 'Failed to compute descriptive statistics in R.');
+      } else {
+        setData(resp.data);
+        if (resp.data.distributions?.length > 0) {
+          setSelectedDistCol(resp.data.distributions[0].column);
+        }
       }
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Error communicating with R analytics service.');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchEDA();
-  }, []);
-
-  if (loading) return <LoadingState message="Computing descriptive statistics and correlations in R..." />;
-  if (error) {
-    if (error.includes('No dataset uploaded')) {
-      return (
-        <EmptyState
-          title="No Dataset Uploaded"
-          description="Upload clickstream data to compute statistics and correlations."
-          onAction={onLoadDefault}
-        />
-      );
+    if (hasDataset) {
+      fetchEDA();
     }
-    return <ErrorState message={error} onRetry={fetchEDA} />;
+  }, [hasDataset, datasetStatus?.active_file]);
+
+  if (!hasDataset) {
+    return (
+      <EmptyState
+        title="No Dataset Uploaded"
+        description="Please upload your clickstream CSV or click 'Load Capstone Dataset' to compute descriptive statistics, histograms, correlation matrices, and conversion cross-tabulations."
+        actionText="Load Capstone Dataset (10k Sessions)"
+        onAction={onLoadDefault}
+      />
+    );
   }
-  if (!data) return null;
+
+  if (loading) return <LoadingState message="Computing descriptive statistics, distributions, and correlations in R..." />;
+
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <ErrorState message={error} onRetry={fetchEDA} />
+        <div className="flex justify-center">
+          <button
+            onClick={onLoadDefault}
+            className="flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Reload Capstone Dataset</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data || !data.numeric_stats) {
+    return (
+      <EmptyState
+        title="No Statistical Summary Available"
+        description="Click below to load the capstone dataset or upload a valid clickstream CSV file."
+        actionText="Load Capstone Dataset (10k Sessions)"
+        onAction={onLoadDefault}
+      />
+    );
+  }
 
   // 1. Distribution Chart Option
   const currentDist = data.distributions?.find((d) => d.column === selectedDistCol) || data.distributions?.[0];

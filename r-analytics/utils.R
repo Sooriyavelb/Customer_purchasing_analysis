@@ -19,7 +19,6 @@ suppressPackageStartupMessages({
 
 SESSION_DIR_BASE <- Sys.getenv("SESSION_DIR", unset = file.path(dirname(getwd()), "temp_sessions"))
 if (!dir.exists(SESSION_DIR_BASE)) {
-  # If running directly from r-analytics folder or project root
   if (dir.exists("temp_sessions")) {
     SESSION_DIR_BASE <- normalizePath("temp_sessions")
   } else if (dir.exists("../temp_sessions")) {
@@ -30,10 +29,14 @@ if (!dir.exists(SESSION_DIR_BASE)) {
 }
 
 get_session_path <- function(session_id) {
-  if (is.null(session_id) || nchar(session_id) == 0) {
-    stop("Session ID is required")
+  if (is.null(session_id) || length(session_id) == 0 || is.na(session_id[1]) || nchar(session_id[1]) == 0) {
+    stop("No dataset uploaded for this session. Please upload a dataset first.")
   }
-  safe_id <- gsub("[^a-zA-Z0-9_-]", "", session_id)
+  sid <- as.character(session_id[1])
+  safe_id <- gsub("[^a-zA-Z0-9_-]", "", sid)
+  if (nchar(safe_id) == 0) {
+    stop("No dataset uploaded for this session. Please upload a dataset first.")
+  }
   s_path <- file.path(SESSION_DIR_BASE, safe_id)
   if (!dir.exists(s_path)) {
     dir.create(s_path, recursive = TRUE, showWarnings = FALSE)
@@ -63,10 +66,10 @@ get_active_dataset_path <- function(session_id) {
   cleaned <- file.path(s_path, "cleaned_clickstream.csv")
   raw <- file.path(s_path, "raw_clickstream.csv")
   
-  if (file.exists(cleaned)) {
-    return(list(path = cleaned, type = "cleaned"))
-  } else if (file.exists(raw)) {
-    return(list(path = raw, type = "raw"))
+  if (file.exists(cleaned[1])) {
+    return(list(path = cleaned[1], type = "cleaned"))
+  } else if (file.exists(raw[1])) {
+    return(list(path = raw[1], type = "raw"))
   } else {
     return(NULL)
   }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api/client';
-import { StudioResponse, StudioConfig, ColumnMeta } from '../types';
+import { StudioResponse, StudioConfig, ColumnMeta, DatasetStatus } from '../types';
 import { DynamicChart } from '../components/DynamicChart';
 import { LoadingState, ErrorState, EmptyState } from '../components/StatusStates';
 import {
@@ -13,14 +13,36 @@ import {
   Trash2,
   Bookmark,
   Layers,
-  Sparkles
+  Sparkles,
+  AlertCircle
 } from 'lucide-react';
 
-export const VisualAnalyticsStudio: React.FC<{ isDark: boolean; onLoadDefault: () => void }> = ({
-  isDark,
-  onLoadDefault,
-}) => {
-  const [columns, setColumns] = useState<ColumnMeta[]>([]);
+const FALLBACK_COLUMNS: ColumnMeta[] = [
+  { name: 'event_type', type: 'character', missing_count: 0, missing_pct: 0, sample_values: ['home', 'product_view', 'add_to_cart'] },
+  { name: 'purchase_amount', type: 'numeric', missing_count: 0, missing_pct: 0, sample_values: ['49.99', '120.00'] },
+  { name: 'product_category', type: 'character', missing_count: 0, missing_pct: 0, sample_values: ['Electronics', 'Fashion'] },
+  { name: 'device_type', type: 'character', missing_count: 0, missing_pct: 0, sample_values: ['desktop', 'mobile', 'tablet'] },
+  { name: 'traffic_source', type: 'character', missing_count: 0, missing_pct: 0, sample_values: ['organic', 'paid_search', 'direct'] },
+  { name: 'visitor_type', type: 'character', missing_count: 0, missing_pct: 0, sample_values: ['new_visitor', 'returning_visitor'] },
+  { name: 'browser', type: 'character', missing_count: 0, missing_pct: 0, sample_values: ['Chrome', 'Safari', 'Firefox'] },
+  { name: 'country', type: 'character', missing_count: 0, missing_pct: 0, sample_values: ['United States', 'United Kingdom'] },
+  { name: 'session_page_number', type: 'integer', missing_count: 0, missing_pct: 0, sample_values: ['1', '2', '3'] },
+  { name: 'time_on_page_seconds', type: 'numeric', missing_count: 0, missing_pct: 0, sample_values: ['45', '120'] },
+  { name: 'cart_value', type: 'numeric', missing_count: 0, missing_pct: 0, sample_values: ['0', '85.50'] },
+  { name: 'session_converted', type: 'integer', missing_count: 0, missing_pct: 0, sample_values: ['0', '1'] },
+  { name: 'customer_segment', type: 'character', missing_count: 0, missing_pct: 0, sample_values: ['Champions', 'At Risk'] },
+  { name: 'customer_lifetime_value', type: 'numeric', missing_count: 0, missing_pct: 0, sample_values: ['350.00', '1200.00'] },
+  { name: 'previous_purchase_count', type: 'integer', missing_count: 0, missing_pct: 0, sample_values: ['2', '7'] },
+  { name: 'discount_percent', type: 'numeric', missing_count: 0, missing_pct: 0, sample_values: ['0', '15'] },
+  { name: 'campaign_type', type: 'character', missing_count: 0, missing_pct: 0, sample_values: ['Summer Sale', 'Black Friday'] }
+];
+
+export const VisualAnalyticsStudio: React.FC<{
+  isDark: boolean;
+  onLoadDefault: () => void;
+  datasetStatus?: DatasetStatus | null;
+}> = ({ isDark, onLoadDefault, datasetStatus }) => {
+  const [columns, setColumns] = useState<ColumnMeta[]>(FALLBACK_COLUMNS);
   const [chartType, setChartType] = useState('bar');
   const [xCol, setXCol] = useState('event_type');
   const [yCol, setYCol] = useState('purchase_amount');
@@ -38,12 +60,14 @@ export const VisualAnalyticsStudio: React.FC<{ isDark: boolean; onLoadDefault: (
   const [configName, setConfigName] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Fetch columns and saved configs on mount
+  const hasDataset = Boolean(datasetStatus?.active_file);
+
+  // Fetch columns and saved configs on mount or when active_file changes
   useEffect(() => {
     const init = async () => {
       try {
         const insp = await api.post('/r/dataset/inspect', {});
-        if (insp.data.columns) {
+        if (insp.data && insp.data.columns && insp.data.columns.length > 0) {
           setColumns(insp.data.columns);
           const cols: string[] = insp.data.columns.map((c: any) => c.name);
           if (cols.includes('event_type')) setXCol('event_type');
@@ -52,13 +76,17 @@ export const VisualAnalyticsStudio: React.FC<{ isDark: boolean; onLoadDefault: (
         const cfgs = await api.get('/r/studio/configs');
         setSavedConfigs(cfgs.data || []);
       } catch (err: any) {
-        // Dataset not yet loaded or similar
+        // Dataset not yet loaded or inspection in progress
       }
     };
     init();
-  }, []);
+  }, [datasetStatus?.active_file]);
 
   const runQuery = async () => {
+    if (!hasDataset) {
+      setError('Dataset is not uploaded. Please upload a dataset or click "Load Capstone Dataset" to query visualizations.');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -74,19 +102,23 @@ export const VisualAnalyticsStudio: React.FC<{ isDark: boolean; onLoadDefault: (
           limit: limit,
         },
       });
-      setResult(resp.data);
+      if (resp.data.status === 'error') {
+        setError(resp.data.message || 'Error executing query in R');
+      } else {
+        setResult(resp.data);
+      }
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Failed to execute query in R service');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (columns.length > 0) {
+    if (hasDataset) {
       runQuery();
     }
-  }, [columns]);
+  }, [hasDataset, datasetStatus?.active_file]);
 
   const handleAddFilter = () => {
     if (columns.length > 0) {
@@ -164,6 +196,29 @@ export const VisualAnalyticsStudio: React.FC<{ isDark: boolean; onLoadDefault: (
           )}
         </div>
       </div>
+
+      {!hasDataset && (
+        <div className="p-4 rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/70 dark:bg-amber-950/30 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <div>
+              <p className="text-xs font-semibold text-amber-800 dark:text-amber-200">
+                Dataset Not Uploaded
+              </p>
+              <p className="text-[11px] text-amber-700 dark:text-amber-400">
+                Configure your chart dimensions below, then click "Load Capstone Dataset" to render real analytics from R.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onLoadDefault}
+            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors shrink-0"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Load Capstone Dataset</span>
+          </button>
+        </div>
+      )}
 
       {error && <ErrorState message={error} onRetry={runQuery} />}
 

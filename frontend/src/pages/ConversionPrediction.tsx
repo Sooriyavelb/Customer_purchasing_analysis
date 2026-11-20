@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { api } from '../api/client';
-import { ConversionPredictionResponse } from '../types';
+import { ConversionPredictionResponse, DatasetStatus } from '../types';
 import { DynamicChart } from '../components/DynamicChart';
 import { MetricCard } from '../components/MetricCard';
 import { LoadingState, ErrorState, EmptyState } from '../components/StatusStates';
@@ -10,15 +10,16 @@ import {
   CheckCircle2,
   Download,
   AlertTriangle,
+  AlertCircle,
   Award,
-  Layers,
   Sparkles
 } from 'lucide-react';
 
-export const ConversionPrediction: React.FC<{ isDark: boolean; onLoadDefault: () => void }> = ({
-  isDark,
-  onLoadDefault,
-}) => {
+export const ConversionPrediction: React.FC<{
+  isDark: boolean;
+  onLoadDefault: () => void;
+  datasetStatus: DatasetStatus | null;
+}> = ({ isDark, onLoadDefault, datasetStatus }) => {
   const [data, setData] = useState<ConversionPredictionResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +28,14 @@ export const ConversionPrediction: React.FC<{ isDark: boolean; onLoadDefault: ()
   const [includeEarlyCheckout, setIncludeEarlyCheckout] = useState(false);
   const [includeCustomerAttr, setIncludeCustomerAttr] = useState(true);
 
+  const hasDataset = Boolean(datasetStatus?.active_file);
+
   const handleTrain = async () => {
+    if (!hasDataset) {
+      setError('Dataset is not uploaded. Please upload your clickstream dataset or click "Load Capstone Dataset" first.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -35,7 +43,11 @@ export const ConversionPrediction: React.FC<{ isDark: boolean; onLoadDefault: ()
         include_early_checkout: includeEarlyCheckout,
         include_customer_attr: includeCustomerAttr,
       });
-      setData(resp.data);
+      if (resp.data.status === 'error') {
+        setError(resp.data.message);
+      } else {
+        setData(resp.data);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -115,6 +127,27 @@ export const ConversionPrediction: React.FC<{ isDark: boolean; onLoadDefault: ()
         )}
       </div>
 
+      {/* Dataset not loaded banner */}
+      {!hasDataset && (
+        <div className="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 rounded-xl text-amber-900 dark:text-amber-200 text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center space-x-2">
+            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <div>
+              <span className="font-bold">Dataset is not uploaded.</span>
+              <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
+                Please upload a clickstream CSV or load the sample capstone dataset before training models.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onLoadDefault}
+            className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold shrink-0"
+          >
+            Load Capstone Dataset
+          </button>
+        </div>
+      )}
+
       {error && <ErrorState message={error} onRetry={handleTrain} />}
 
       {/* Experimental Protocol & Training Configuration Card */}
@@ -124,7 +157,7 @@ export const ConversionPrediction: React.FC<{ isDark: boolean; onLoadDefault: ()
           Strict Leakage Prevention Protocol & Feature Allowlist
         </h3>
 
-        <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-800 dark:text-amber-300">
+        <div className="p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-lg text-xs text-blue-800 dark:text-blue-300">
           <strong>Strict ML Course Rules Enforced:</strong> Target = <code>session_converted</code>. Cut point = first <code>add_to_cart</code> (only events before it). Never uses purchase_amount, is_conversion_event, discount_percent, or post-cart events to prevent fake 99% accuracy. Realistic AUC expectation: 0.60 – 0.75.
         </div>
 
@@ -173,17 +206,25 @@ export const ConversionPrediction: React.FC<{ isDark: boolean; onLoadDefault: ()
           <button
             onClick={handleTrain}
             disabled={loading}
-            className="flex items-center space-x-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors disabled:opacity-50"
+            className={`flex items-center space-x-2 px-5 py-2.5 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors ${
+              hasDataset ? 'bg-blue-600 hover:bg-blue-700' : 'bg-slate-400 cursor-not-allowed'
+            }`}
           >
             <Play className="w-4 h-4 fill-current" />
-            <span>{loading ? 'Training 4 Models in R...' : 'Train Conversion Models'}</span>
+            <span>
+              {loading
+                ? 'Training 4 Models in R...'
+                : hasDataset
+                ? 'Train Conversion Models'
+                : 'Dataset Not Uploaded (Click to Load)'}
+            </span>
           </button>
         </div>
       </div>
 
       {loading && <LoadingState message="Training Logistic Regression, Decision Tree, Random Forest & XGBoost in R..." />}
 
-      {!loading && !data && (
+      {!loading && !data && hasDataset && (
         <EmptyState
           title="Ready to Train Conversion Classifiers"
           description="Click 'Train Conversion Models' to build, validate, and compare models on the held-out test cohort."

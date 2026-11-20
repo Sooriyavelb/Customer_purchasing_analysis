@@ -118,7 +118,10 @@ export const App: React.FC = () => {
                 path="/preprocessing"
                 element={<DataPreprocessing onCleanedReady={fetchHealthAndStatus} />}
               />
-              <Route path="/eda" element={<EDA isDark={isDark} onLoadDefault={handleLoadDefault} />} />
+              <Route
+                path="/eda"
+                element={<EDA isDark={isDark} onLoadDefault={handleLoadDefault} datasetStatus={datasetStatus} />}
+              />
               <Route
                 path="/clickstream"
                 element={<ClickstreamAnalysis isDark={isDark} onLoadDefault={handleLoadDefault} />}
@@ -129,7 +132,7 @@ export const App: React.FC = () => {
               />
               <Route
                 path="/funnel"
-                element={<ConversionFunnel isDark={isDark} onLoadDefault={handleLoadDefault} />}
+                element={<ConversionFunnel isDark={isDark} onLoadDefault={handleLoadDefault} datasetStatus={datasetStatus} />}
               />
               <Route
                 path="/segmentation"
@@ -137,11 +140,23 @@ export const App: React.FC = () => {
               />
               <Route
                 path="/conversion-prediction"
-                element={<ConversionPrediction isDark={isDark} onLoadDefault={handleLoadDefault} />}
+                element={
+                  <ConversionPrediction
+                    isDark={isDark}
+                    onLoadDefault={handleLoadDefault}
+                    datasetStatus={datasetStatus}
+                  />
+                }
               />
               <Route
                 path="/revenue-estimation"
-                element={<RevenueEstimation isDark={isDark} onLoadDefault={handleLoadDefault} />}
+                element={
+                  <RevenueEstimation
+                    isDark={isDark}
+                    onLoadDefault={handleLoadDefault}
+                    datasetStatus={datasetStatus}
+                  />
+                }
               />
               <Route
                 path="/time-series"
@@ -149,7 +164,13 @@ export const App: React.FC = () => {
               />
               <Route
                 path="/visual-studio"
-                element={<VisualAnalyticsStudio isDark={isDark} onLoadDefault={handleLoadDefault} />}
+                element={
+                  <VisualAnalyticsStudio
+                    isDark={isDark}
+                    onLoadDefault={handleLoadDefault}
+                    datasetStatus={datasetStatus}
+                  />
+                }
               />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

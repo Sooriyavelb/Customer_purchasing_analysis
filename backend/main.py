@@ -228,6 +228,8 @@ async def save_field_mapping(payload: FieldMappingPayload, session_id: str = Dep
 async def proxy_to_r(request: Request, path: str, session_id: str = Depends(get_or_create_session)):
     url = f"{R_SERVICE_URL}/{path}"
     body = None
+    params = dict(request.query_params)
+
     if request.method in ["POST", "PUT"]:
         try:
             body = await request.json()
@@ -235,9 +237,12 @@ async def proxy_to_r(request: Request, path: str, session_id: str = Depends(get_
                 body["session_id"] = session_id
         except Exception:
             body = {"session_id": session_id}
-    
-    params = dict(request.query_params)
-    params["session_id"] = session_id
+        # Do not send in query string if in body to prevent vector coercion in R
+        params.pop("session_id", None)
+    else:
+        params["session_id"] = session_id
+
+    headers = {"X-Session-Id": session_id}
 
     try:
         async with httpx.AsyncClient(timeout=300.0) as client:
@@ -245,9 +250,9 @@ async def proxy_to_r(request: Request, path: str, session_id: str = Depends(get_
                 method=request.method,
                 url=url,
                 params=params,
-                json=body
+                json=body,
+                headers=headers
             )
-            # Try to return JSON, else plain text
             try:
                 return JSONResponse(status_code=resp.status_code, content=resp.json())
             except Exception:

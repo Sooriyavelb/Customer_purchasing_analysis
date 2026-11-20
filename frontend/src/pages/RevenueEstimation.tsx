@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { api } from '../api/client';
-import { RevenueEstimationResponse } from '../types';
+import { RevenueEstimationResponse, DatasetStatus } from '../types';
 import { DynamicChart } from '../components/DynamicChart';
 import { MetricCard } from '../components/MetricCard';
 import { LoadingState, ErrorState, EmptyState } from '../components/StatusStates';
@@ -10,15 +10,15 @@ import {
   TrendingUp,
   Download,
   Award,
-  Layers,
-  Sparkles,
-  BarChart2
+  AlertCircle,
+  Sparkles
 } from 'lucide-react';
 
-export const RevenueEstimation: React.FC<{ isDark: boolean; onLoadDefault: () => void }> = ({
-  isDark,
-  onLoadDefault,
-}) => {
+export const RevenueEstimation: React.FC<{
+  isDark: boolean;
+  onLoadDefault: () => void;
+  datasetStatus: DatasetStatus | null;
+}> = ({ isDark, onLoadDefault, datasetStatus }) => {
   const [data, setData] = useState<RevenueEstimationResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +26,14 @@ export const RevenueEstimation: React.FC<{ isDark: boolean; onLoadDefault: () =>
   const [includeFirstCartItem, setIncludeFirstCartItem] = useState(true);
   const [includeCustomerAttr, setIncludeCustomerAttr] = useState(true);
 
+  const hasDataset = Boolean(datasetStatus?.active_file);
+
   const handleTrain = async () => {
+    if (!hasDataset) {
+      setError('Dataset is not uploaded. Please upload your clickstream dataset or click "Load Capstone Dataset" first.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -34,7 +41,11 @@ export const RevenueEstimation: React.FC<{ isDark: boolean; onLoadDefault: () =>
         include_first_cart_item: includeFirstCartItem,
         include_customer_attr: includeCustomerAttr,
       });
-      setData(resp.data);
+      if (resp.data.status === 'error') {
+        setError(resp.data.message);
+      } else {
+        setData(resp.data);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -150,6 +161,27 @@ export const RevenueEstimation: React.FC<{ isDark: boolean; onLoadDefault: () =>
         )}
       </div>
 
+      {/* Dataset not loaded banner */}
+      {!hasDataset && (
+        <div className="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 rounded-xl text-amber-900 dark:text-amber-200 text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center space-x-2">
+            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <div>
+              <span className="font-bold">Dataset is not uploaded.</span>
+              <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
+                Please upload a clickstream CSV or load the sample capstone dataset before training models.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onLoadDefault}
+            className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold shrink-0"
+          >
+            Load Capstone Dataset
+          </button>
+        </div>
+      )}
+
       {error && <ErrorState message={error} onRetry={handleTrain} />}
 
       {/* Regression Configuration Card */}
@@ -202,17 +234,25 @@ export const RevenueEstimation: React.FC<{ isDark: boolean; onLoadDefault: () =>
           <button
             onClick={handleTrain}
             disabled={loading}
-            className="flex items-center space-x-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors disabled:opacity-50"
+            className={`flex items-center space-x-2 px-5 py-2.5 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors ${
+              hasDataset ? 'bg-blue-600 hover:bg-blue-700' : 'bg-slate-400 cursor-not-allowed'
+            }`}
           >
             <Play className="w-4 h-4 fill-current" />
-            <span>{loading ? 'Training Revenue Models in R...' : 'Train Revenue Models'}</span>
+            <span>
+              {loading
+                ? 'Training Revenue Models in R...'
+                : hasDataset
+                ? 'Train Revenue Models'
+                : 'Dataset Not Uploaded (Click to Load)'}
+            </span>
           </button>
         </div>
       </div>
 
       {loading && <LoadingState message="Fitting Linear Regression, Random Forest and XGBoost in R..." />}
 
-      {!loading && !data && (
+      {!loading && !data && hasDataset && (
         <EmptyState
           title="Ready to Estimate Order Values & Revenue"
           description="Click 'Train Revenue Models' to fit order value regressors and compute expected revenue per session."

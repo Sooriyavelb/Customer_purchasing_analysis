@@ -6,12 +6,11 @@ import {
   UploadCloud,
   FileSpreadsheet,
   CheckCircle2,
-  AlertTriangle,
-  RotateCcw,
+  Trash2,
   Sparkles,
-  Layers,
   ArrowRightLeft,
-  Trash2
+  AlertTriangle,
+  Info
 } from 'lucide-react';
 
 export const DatasetUpload: React.FC<{
@@ -32,6 +31,15 @@ export const DatasetUpload: React.FC<{
     setError(null);
     try {
       const resp = await api.post('/r/dataset/inspect', {});
+      if (resp.data.status === 'empty') {
+        setData(null);
+        return;
+      }
+      if (resp.data.status === 'error') {
+        setError(resp.data.error || resp.data.message || 'Dataset inspection error in R');
+        setData(null);
+        return;
+      }
       setData(resp.data);
       if (resp.data.columns) {
         // Initialize mapping with saved or auto-detected
@@ -39,7 +47,11 @@ export const DatasetUpload: React.FC<{
         setMapping(initial);
       }
     } catch (err: any) {
-      setError(err.message);
+      if (err.response?.status === 400 && err.response?.data?.message?.includes('No dataset')) {
+        setData(null);
+      } else {
+        setError(err.response?.data?.error || err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -65,7 +77,7 @@ export const DatasetUpload: React.FC<{
       await fetchInspection();
       onDatasetChanged();
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Upload failed');
     } finally {
       setUploading(false);
     }
@@ -159,7 +171,7 @@ export const DatasetUpload: React.FC<{
 
       {loading && !uploading && <LoadingState message="Analyzing dataset structure in R..." />}
 
-      {data?.status === 'ready' && (
+      {data?.status === 'ready' && data.columns && (
         <>
           {/* Metadata Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -219,26 +231,24 @@ export const DatasetUpload: React.FC<{
                 </button>
               </div>
             </div>
-
-            <p className="text-xs text-slate-400 mt-2 mb-4">
-              Map your dataset's columns to the standard fields expected by the R analytics modules. If a column is missing from your dataset, select empty to exclude it.
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {data.standard_fields.map((std) => (
-                <div key={std} className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60">
-                  <label className="text-[11px] font-mono text-slate-500 dark:text-slate-400 block truncate">
-                    {std}
-                  </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-4 text-xs">
+              {Object.keys(data.auto_mapping || {}).slice(0, 18).map((stdField) => (
+                <div
+                  key={stdField}
+                  className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700"
+                >
+                  <span className="font-mono text-slate-600 dark:text-slate-300 font-medium truncate mr-2">
+                    {stdField}
+                  </span>
                   <select
-                    value={mapping[std] || ''}
-                    onChange={(e) => setMapping({ ...mapping, [std]: e.target.value })}
-                    className="mt-1 w-full text-xs font-medium bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 outline-hidden"
+                    value={mapping[stdField] || ''}
+                    onChange={(e) => setMapping({ ...mapping, [stdField]: e.target.value })}
+                    className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 text-slate-800 dark:text-slate-200 text-xs max-w-[140px]"
                   >
-                    <option value="">-- Unmapped --</option>
-                    {data.columns.map((c) => (
-                      <option key={c.name} value={c.name}>
-                        {c.name} ({c.type})
+                    <option value="">-- None --</option>
+                    {data.columns.map((col) => (
+                      <option key={col.name} value={col.name}>
+                        {col.name}
                       </option>
                     ))}
                   </select>
@@ -250,7 +260,7 @@ export const DatasetUpload: React.FC<{
           {/* Schema & Missing Values Table */}
           <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
             <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">
-              Column Data Types & Missing Value Audit
+              Column Data Types & Missing Value Audit ({data.columns.length} columns)
             </h3>
             <div className="overflow-x-auto max-h-80 overflow-y-auto">
               <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-xs">
@@ -296,9 +306,12 @@ export const DatasetUpload: React.FC<{
 
           {/* First 50 Rows Preview */}
           <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
-            <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">
-              Dataset Preview (First 50 Rows, All Columns)
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                Dataset Preview (First 50 Rows, All {data.columns.length} Columns)
+              </h3>
+              <span className="text-xs text-slate-400">Scroll horizontally to view all fields</span>
+            </div>
             <div className="overflow-x-auto max-h-96 overflow-y-auto border border-slate-200 dark:border-slate-800 rounded-lg">
               <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-xs font-mono">
                 <thead className="bg-slate-100 dark:bg-slate-800 sticky top-0">
