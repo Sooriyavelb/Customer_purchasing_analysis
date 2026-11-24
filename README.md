@@ -101,7 +101,7 @@ cd ..
 
 ## How to Run the Application
 
-### Option A: One-Command Runner (Recommended)
+### Option A: One-Command Runner
 Launch all 3 services in separate windows and open the browser automatically:
 ```powershell
 .\scripts\run_all.ps1
